@@ -8,10 +8,10 @@ const app = express();
 app.use((req, res, next) => {
     const query = url.parse(req.url, true).query;
 
-    // Set the default target to Roblox on now.gg
+    // Set the target URL, default to Roblox on now.gg
     req.target = query.target || 'https://now.gg/apps/roblox-corporation/5349/roblox.html';
 
-    // Remove the target query parameter from the URL for clean forwarding
+    // Remove the target query parameter for clean forwarding
     const parsedUrl = url.parse(req.url, true);
     delete parsedUrl.query.target;
     req.url = url.format(parsedUrl);
@@ -19,15 +19,24 @@ app.use((req, res, next) => {
     next();
 });
 
-// Proxy middleware for dynamic targets
+// Proxy middleware with cookie and header management
 app.use(
     createProxyMiddleware({
-        router: (req) => req.target, // Dynamically set the target URL
-        changeOrigin: true,         // Modify the Host header for cross-origin requests
-        selfHandleResponse: false,  // Let the proxy handle the response
-        logLevel: 'debug',          // Optional: Debug logs for easier troubleshooting
+        router: (req) => req.target,
+        changeOrigin: true,
+        selfHandleResponse: false,
+        logLevel: 'debug',
         onProxyReq: (proxyReq, req, res) => {
+            // Log the proxied request
             console.log(`Proxying request to: ${req.target}${req.url}`);
+        },
+        onProxyRes: (proxyRes, req, res) => {
+            // Clear conflicting headers to prevent loops
+            delete proxyRes.headers['set-cookie'];
+        },
+        onError: (err, req, res) => {
+            console.error('Proxy error:', err.message);
+            res.status(500).send('Proxy error occurred.');
         },
     })
 );
@@ -35,5 +44,5 @@ app.use(
 // Start the proxy server
 const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Proxy running. Play Roblox here: http://localhost:${PORT}/?target=https://now.gg/apps/roblox-corporation/5349/roblox.html`);
+    console.log(`Proxy running. Access it at http://localhost:${PORT}/?target=https://now.gg/apps/roblox-corporation/5349/roblox.html`);
 });
