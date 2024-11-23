@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentVue Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+        }
+        .error, .success {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+        }
+        .grades {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Login to StudentVue</h2>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="text" id="domain" placeholder="School Domain (e.g. yourdistrict.school.com)" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <!-- Login Success/Failure Message -->
+    <div id="message" class="error"></div>
+
+    <!-- Grades Display -->
+    <div id="grades" class="grades"></div>
+
+    <!-- Fetch Grades Button -->
+    <button id="fetchGrades" style="display:none;">Get Grades</button>
+</div>
+
+<script>
+    // Handle Login
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const domain = document.getElementById('domain').value;
+
+        try {
+            const response = await fetch('/login', {  // The route is relative to the Flask app
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password, domain })
+            });
+
+            const data = await response.json();
+
+            if (response.status === 200) {
+                document.getElementById('message').classList.remove('error');
+                document.getElementById('message').classList.add('success');
+                document.getElementById('message').innerText = data.message;
+
+                // Show grades button after successful login
+                document.getElementById('fetchGrades').style.display = 'inline-block';
+            } else {
+                document.getElementById('message').classList.remove('success');
+                document.getElementById('message').classList.add('error');
+                document.getElementById('message').innerText = data.error || 'Unknown error occurred';
+            }
+        } catch (error) {
+            document.getElementById('message').classList.add('error');
+            document.getElementById('message').innerText = 'Failed to communicate with the server';
+        }
+    });
+
+    // Handle Fetching Grades
+    document.getElementById('fetchGrades').addEventListener('click', async function() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const domain = document.getElementById('domain').value;
+
+        try {
+            const response = await fetch(`/grades?username=${username}&password=${password}&domain=${domain}`);
+
+            const data = await response.json();
+
+            if (response.status === 200) {
+                document.getElementById('grades').innerHTML = `<strong>Grades:</strong><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                document.getElementById('grades').innerHTML = 'Error fetching grades';
+            }
+        } catch (error) {
+            document.getElementById('grades').innerHTML = 'Failed to communicate with the server';
+        }
+    });
+</script>
+
+</body>
+</html>
