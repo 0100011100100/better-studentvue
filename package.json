@@ -1,0 +1,18 @@
+{
+  "name": "better-studentvue",
+  "version": "1.0.0",
+  "description": "improved studentvue ui",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.1",
+    "http-proxy-middleware": "^3.0.3",
+    "nano": "^10.1.4"
+  }
+}
